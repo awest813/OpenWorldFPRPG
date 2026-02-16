@@ -33,7 +33,6 @@ export async function createRoomGI(engine) {
     character.health.rotationCheck = hero;
     character.health.rangeCheck = character;
     setPlayer(character);
-    PLAYER = character;
 
     setupEnvironment(scene);
 

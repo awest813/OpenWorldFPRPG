@@ -43,7 +43,6 @@ export async function createOutdoor(engine) {
     character.health.rangeCheck = character;
     character.health.progression = progression;
     setPlayer(character);
-    PLAYER = character;
 
     // Todo: add shadow and post toggles in settings
     // Defer non-critical operations

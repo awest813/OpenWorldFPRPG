@@ -1,15 +1,28 @@
 /**
- * @deprecated Global runtime values are being migrated to src/core/runtimeState.js.
- * Keep this file as a temporary compatibility bridge for legacy modules that still
- * rely on window-scoped identifiers.
+ * @deprecated Legacy global compatibility shim.
+ *
+ * Runtime state ownership moved to `src/core/runtimeState.js`.
+ * This file now only exposes read-only accessors for migrated globals so
+ * older modules can continue reading values while new code uses runtimeState.
  */
 
-var DEBUG = false;
+const getRuntimeStateBridge = () => globalThis.__RUNTIME_STATE__;
 
-var SCENE_MANAGER = {};
+function defineRuntimeReadonlyGlobal(name, getter) {
+  Object.defineProperty(globalThis, name, {
+    configurable: true,
+    enumerable: true,
+    get: getter
+  });
+}
 
-var PLAYER = {};
-var DUMMY = {};
+defineRuntimeReadonlyGlobal('SCENE_MANAGER', () => getRuntimeStateBridge()?.sceneManager ?? null);
+defineRuntimeReadonlyGlobal('PLAYER', () => getRuntimeStateBridge()?.player ?? null);
+defineRuntimeReadonlyGlobal('DUMMY', () => getRuntimeStateBridge()?.dummy ?? null);
+defineRuntimeReadonlyGlobal('inputMap', () => getRuntimeStateBridge()?.inputMap ?? {});
+defineRuntimeReadonlyGlobal('DEBUG', () => Boolean(getRuntimeStateBridge()?.flags?.debug));
+defineRuntimeReadonlyGlobal('FAST_RELOAD', () => Boolean(getRuntimeStateBridge()?.flags?.fastReload));
+defineRuntimeReadonlyGlobal('ON_MOBILE', () => Boolean(getRuntimeStateBridge()?.flags?.onMobile));
 
 var DMGPOP = {};
 
@@ -44,15 +57,7 @@ var targetBaseOnCameraView = true; // if false target based on character rotatio
 var DYNAMIC_CAMERA = false;
 // Used for game controller on pc and shows joystick on mobile.
 // Emulates KOA smooth camera follow effect
-var ON_MOBILE = true;
 var CANVASES = []; //One canvas For Game, one for Mobile Input Detection
-
-// todo move this from global. used for mobile input
-var inputMap = {};
-
-
-var FAST_RELOAD = false; //Enable for fast development, disable for prod
-
 
 // Graphics Settings
 var WEBGPU = false; //otherwise use WebGL

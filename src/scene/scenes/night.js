@@ -47,7 +47,6 @@ export async function createNight(engine) {
     character.health.rotationCheck = hero;
     character.health.rangeCheck = character;
     setPlayer(character);
-    PLAYER = character;
 
     camera.alpha = 5.3805;
     camera.beta = 1.4479;

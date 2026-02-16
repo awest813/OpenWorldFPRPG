@@ -23,3 +23,12 @@ These values follow the active player session and are set by scene creators and 
 
 `src/GLOBALS.js` remains as a temporary compatibility layer for modules that still read/write
 window-scoped globals. New/updated modules should use `runtimeState` helper getters/setters.
+
+## Migration status (legacy globals)
+
+Legacy write paths for `SCENE_MANAGER`, `PLAYER`, `DUMMY`, `inputMap`, `DEBUG`, and `ON_MOBILE`
+have been migrated to `runtimeState` setters/getters.
+
+Remaining exception(s): none in `src/` at this time. `src/GLOBALS.js` is now read-only for those
+runtime-backed names and exists only to support legacy reads.
+

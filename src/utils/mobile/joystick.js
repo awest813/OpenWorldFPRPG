@@ -6,7 +6,6 @@ function isMobile() {
 export function createMobileControls(scene, camera, player) {
     const onMobile = isMobile();
     setOnMobile(onMobile);
-    ON_MOBILE = onMobile;
     if (!onMobile) { return; }
 
     // TODO move to own class
