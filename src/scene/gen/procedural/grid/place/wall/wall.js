@@ -1,4 +1,5 @@
 import { cellSize, gridSize } from "../../constants.js";
+import { markMeshAsInteractable } from "../../../../../../character/interact/interaction.js";
 
 // Function to create a wall in a specific direction
 export function createWallOnly(x, z, direction, size, key, meshes) {
@@ -67,11 +68,16 @@ export function createWall2Story(x, z, direction, size, key, cornerInfo) {
     // Select Door
     if (useDifferentMesh) {
         wall = meshes['door'][0].createInstance(`${key}_wall_${direction}`);
+        markMeshAsInteractable(wall, {
+            type: "door",
+            prompt: "Press E - Open door",
+            openAngle: Math.PI / 2
+        });
     } else {
         // Use the default wall mesh
         wall = meshes['wall'][0].createInstance(`${key}_wall_${direction}`);
     }
-    wall.isPickable = false;
+    wall.isPickable = !!wall.metadata?.interactable;
     wall.alwaysSelectAsActiveMesh = true;
 
     wall.parent = null;
