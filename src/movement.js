@@ -1,5 +1,6 @@
 import { SPELLS } from './combat/SPELLS.js';
 import { createInteractionController } from './character/interact/interaction.js';
+import { isMeleeTargetingDebugEnabled, resolveMeleeTarget, setMeleeTargetingDebugEnabled } from './combat/meleeTargetResolver.js';
 
 export function setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate) {
     inputMap = {};
@@ -18,6 +19,10 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
         if (normalizedKey === "f") SPRINTING = !SPRINTING;
         if (normalizedKey === "q") castSpellOnCurrentTarget(SPELLS.fireball);
         if (normalizedKey === "e") triggerInteractAction();
+        if (normalizedKey === "v") {
+            setMeleeTargetingDebugEnabled(!isMeleeTargetingDebugEnabled());
+            console.log(`Melee targeting debug: ${isMeleeTargetingDebugEnabled() ? "enabled" : "disabled"}`);
+        }
     }));
     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
         // inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keydown";
@@ -40,13 +45,13 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
     });
     canvas.addEventListener("mousedown", (event) => {
         if (event.button === 0) {
-            castSpellOnCurrentTarget(SPELLS.quickSwing);
+            castMeleeSpellWithResolver(SPELLS.quickSwing, QUICK_SWING_COOLDOWN_MS);
             return;
         }
 
         if (event.button === 2) {
             event.preventDefault();
-            castSpellOnCurrentTarget(SPELLS.heavySwing);
+            castMeleeSpellWithResolver(SPELLS.heavySwing, HEAVY_SWING_COOLDOWN_MS);
         }
     });
 
@@ -156,6 +161,52 @@ function castSpellOnCurrentTarget(spell) {
     spell.cast(PLAYER.health, PLAYER.target.health);
 }
 
+function castMeleeSpellWithResolver(spell, cooldownMs) {
+    if (!PLAYER?.health || !spell) {
+        return false;
+    }
+
+    const now = Date.now();
+    const previousCast = meleeCastTimesBySpell.get(spell.name) ?? 0;
+    if (now - previousCast < cooldownMs) {
+        return false;
+    }
+
+    const target = resolveMeleeSpellTarget(spell);
+    if (!target?.health) {
+        return false;
+    }
+
+    PLAYER.target = target;
+
+    if (targetBaseOnCameraView) {
+        rotateToTarget();
+    }
+
+    const didCast = spell.cast(PLAYER.health, target.health);
+    if (didCast) {
+        meleeCastTimesBySpell.set(spell.name, now);
+    }
+    return didCast;
+}
+
+function resolveMeleeSpellTarget(spell) {
+    if (!PLAYER?.position) {
+        return null;
+    }
+
+    const activeCamera = PLAYER.scene?.activeCamera;
+    if (!activeCamera) {
+        return null;
+    }
+
+    const cameraForward = activeCamera.getFrontPosition(1).subtract(activeCamera.position).normalize();
+    return resolveMeleeTarget(PLAYER.scene, PLAYER.position, cameraForward, {
+        maxDistance: Math.min(spell.range, attackDistance),
+        coneDotThreshold: MELEE_TARGET_CONE_DOT_THRESHOLD
+    });
+}
+
 function triggerInteractAction() {
     if (typeof window.onPlayerInteract === "function") {
         window.onPlayerInteract();
@@ -215,8 +266,7 @@ function handleClick() {
             thirdAttack = true;
             handleClick.thirdAttackTimer = setTimeout(() => {
                 thirdAttack = false;
-                if (PLAYER.target && targetBaseOnCameraView) rotateToTarget();
-                if (PLAYER.target) SPELLS.heavySwing.cast(PLAYER.health, PLAYER.target.health);
+                castMeleeSpellWithResolver(SPELLS.heavySwing, HEAVY_SWING_COOLDOWN_MS);
 
             }, 400);
         } else {
@@ -242,8 +292,7 @@ function handleClick() {
         handleClick.firstTimer = setTimeout(() => {
             mouseIsActive = false;
             firstAttack = false;
-            if (PLAYER.target && targetBaseOnCameraView) rotateToTarget();
-            if (PLAYER.target) SPELLS.quickSwing.cast(PLAYER.health, PLAYER.target.health);
+            castMeleeSpellWithResolver(SPELLS.quickSwing, QUICK_SWING_COOLDOWN_MS);
         }, 100); //handle with engine time
     } else {
         mouseIsActive = true;
@@ -251,8 +300,7 @@ function handleClick() {
         handleClick.secondTimer = setTimeout(() => {
             mouseIsActive = false;
             secondAttack = false;
-            if (PLAYER.target && targetBaseOnCameraView) rotateToTarget();
-            if (PLAYER.target) SPELLS.quickSwing.cast(PLAYER.health, PLAYER.target.health);
+            castMeleeSpellWithResolver(SPELLS.quickSwing, QUICK_SWING_COOLDOWN_MS);
         }, 100);
     }
 }
@@ -286,6 +334,10 @@ let lastMoveDirection = BABYLON.Vector3.Zero();
 let mobileMoving = false;
 let mouseIsActive = false;
 let attackDistance = 17.0;
+const QUICK_SWING_COOLDOWN_MS = 250;
+const HEAVY_SWING_COOLDOWN_MS = 700;
+const MELEE_TARGET_CONE_DOT_THRESHOLD = 0.45;
+const meleeCastTimesBySpell = new Map();
 let thirdAttack = false;
 let canTryThirdCombo = false;
 function handleCharacterMovement(inputMap, character, camera, hero, anim, engine, dummyAggregate) {
