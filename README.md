@@ -61,6 +61,19 @@ Run this quick static check to validate relative import paths used by files in `
 node scripts/check-scene-imports.mjs
 ```
 
+### Development checks
+Run linting before opening a pull request:
+
+```bash
+npm run lint
+```
+
+Use auto-fixes where available:
+
+```bash
+npm run lint:fix
+```
+
 ## Run Locally
 `git clone` the repo.
 
