@@ -1,3 +1,4 @@
+import { setPlayer } from '../../core/runtimeState.js';
 import { loadHeroModel } from '../../character/hero.js';
 import { setupFpsCamera } from '../../utils/camera_fps.js';
 import { setupPhysics } from '../../utils/physics.js';
@@ -41,6 +42,7 @@ export async function createOutdoor(engine) {
     character.health.rotationCheck = scene.activeCamera;
     character.health.rangeCheck = character;
     character.health.progression = progression;
+    setPlayer(character);
     PLAYER = character;
 
     // Todo: add shadow and post toggles in settings

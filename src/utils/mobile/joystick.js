@@ -1,137 +1,127 @@
+import { getInputMap, setOnMobile } from '../../core/runtimeState.js';
+
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 export function createMobileControls(scene, camera, player) {
-    function isMobile() {
-        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    }
-    ON_MOBILE = isMobile();
-    if (!ON_MOBILE) { return; }
+    const onMobile = isMobile();
+    setOnMobile(onMobile);
+    ON_MOBILE = onMobile;
+    if (!onMobile) { return; }
 
-    // Create joysticks
-    const movementJoystick = new BABYLON.VirtualJoystick(true);
-    const cameraJoystick = new BABYLON.VirtualJoystick(false);
-    movementJoystick.setJoystickColor("#00000072");
-    cameraJoystick.setJoystickColor("#00000072");
+    // TODO move to own class
+    // Virtual joystick setup for movement
+    const movementJoystick = new BABYLON.VirtualJoystick(true); // Left joystick
 
-    CANVASES = document.querySelectorAll("canvas");
+    movementJoystick.setJoystickSensibility(0.1);
+    movementJoystick.setJoystickColor('orange');
 
-    CANVASES[1].style.zIndex = -1;
-    // Hide joysticks initially
-    // movementJoystick.setVisible(false);
-    // cameraJoystick.setVisible(false);
+    // Optional joystick for camera (if needed)
+    const cameraJoystick = new BABYLON.VirtualJoystick(false); // Right joystick
+    cameraJoystick.setJoystickSensibility(0.1);
+    cameraJoystick.setJoystickColor('blue');
 
-    CANVASES[1].addEventListener('click', function (event) {
-        const rect = CANVASES[1].getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
 
-        let cornerSize = 500;
+    movementJoystick.setActionOnTouch(() => {
+        // Add jump or attack logic here if needed
+    });
 
-        // Check if the click is in the bottom left corner
-        console.log(event.clientY);
-        console.log(rect.bottom);
+    scene.registerBeforeRender(() => {
+        // Joystick controls for movement
+        const inputMap = getInputMap();
+        const moveX = movementJoystick.deltaPosition.x;
+        const moveZ = movementJoystick.deltaPosition.y;
 
-        if (event.clientY >= rect.bottom * 0.6) {
-            console.log("click second canvas bottom");
+        if (moveX !== 0 || moveZ !== 0) {
+            // Translate joystick movement to world movement
 
+            // const moveDirection = new BABYLON.Vector3(moveX, 0, -moveZ);
+            // const transformedDirection = BABYLON.Vector3.TransformCoordinates(moveDirection, camera.getWorldMatrix());
+            // transformedDirection.y = 0;
+
+            // // Apply movement to the player
+            // player.moveWithCollisions(transformedDirection.scale(0.1));
         } else {
-            console.log("clicked second canvas top, passing through");
-
-            CANVASES[1].style.zIndex = -1;
             inputMap["w"] = false;
             inputMap["s"] = false;
             inputMap["a"] = false;
             inputMap["d"] = false;
+        }
 
-            // Dispatch a click event on the first canvas at the same position
-            const clickEvent = new MouseEvent('click', {
-                clientX: CANVASES[0].getBoundingClientRect().left + x,
-                clientY: CANVASES[0].getBoundingClientRect().top + y,
-                bubbles: true,
-                cancelable: true,
-                view: window
-            });
+        // Joystick controls for camera
+        const cameraX = cameraJoystick.deltaPosition.x;
+        const cameraY = cameraJoystick.deltaPosition.y;
 
-            CANVASES[0].dispatchEvent(clickEvent);
+        if (cameraX !== 0 || cameraY !== 0) {
+
+            // camera.alpha += cameraX * 0.02; // Horizontal rotation
+            // camera.beta -= cameraY * 0.02; // Vertical rotation
+
+            // // Clamp beta to avoid flipping
+            // camera.beta = Math.max(0.1, Math.min(Math.PI / 2, camera.beta));
         }
     });
 
 
-    // Touch event listeners
-    scene.onPointerObservable.add(function (pointerInfo) {
-        const { width, height } = scene.getEngine().getRenderingCanvas();
-        if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERDOWN) {
-            // console.log(pointerInfo.event.clientY >= height * 0.7);
-            if (pointerInfo.event.clientY >= height * 0.7) {
-                // CANVASES[1].style.zIndex = 2;
 
-            }
-            // var pickResult = pointerInfo.pickInfo;
-            // if (pickResult.hit) {
-            //     console.log("Additional onPointerDown function: Picked mesh - " + pickResult.pickedMesh.name);
-            // }
+
+    // Add an action button for jumping
+    const jumpButton = document.createElement('button');
+    jumpButton.innerText = 'Jump';
+    jumpButton.style.position = 'absolute';
+    jumpButton.style.bottom = '20px';
+    jumpButton.style.right = '20px';
+    jumpButton.style.width = '100px';
+    jumpButton.style.height = '50px';
+    jumpButton.style.zIndex = '2';
+
+
+
+
+
+    // Append the button to the body
+    document.body.appendChild(jumpButton);
+
+    // Add event listener for the jump button
+    jumpButton.addEventListener('touchstart', () => {
+        // Example jump logic
+        if (player.physicsImpostor) {
+            const jumpForce = new BABYLON.Vector3(0, 10, 0);
+            player.physicsImpostor.applyImpulse(jumpForce, player.getAbsolutePosition());
         }
-        // if (evt.y <= height * 0.7) {
-        //     // Top 70% of the screen - normal click interaction
-        //     // const pickResult = scene.pick(evt.x, evt.y, pointerPredicate);
-        //     // if (pickResult.hit) {
-        //     //     handleObjectInteraction(pickResult.pickedMesh);
-        //     // }
-        // } else {
-        //     // Bottom 30% of the screen - joystick controls
-        //     if (evt.x < width * 0.3) {
-        //         movementJoystick.setVisible(true);
-        //     } else if (evt.x > width * 0.7) {
-        //         cameraJoystick.setVisible(true);
-        //     }
-        // }
     });
 
-    // scene.onPointerUp = () => {
-    //     movementJoystick.setVisible(false);
-    //     cameraJoystick.setVisible(false);
 
-    // };
 
-    // Update loop
     scene.onBeforeRenderObservable.add(() => {
-        if (movementJoystick.pressed) {
-            // const moveX = movementJoystick.deltaPosition.x * 0.1;
-            // const moveZ = movementJoystick.deltaPosition.y * 0.1;
-            // player.position.addInPlace(new BABYLON.Vector3(moveX, 0, moveZ));
-            if (movementJoystick.deltaPosition.y > 0.5) {
-                inputMap["w"] = true;
-                inputMap["s"] = false;
-                inputMap["a"] = false;
-                inputMap["d"] = false;
-            }
-            if (movementJoystick.deltaPosition.y < -0.5) {
-                inputMap["w"] = false;
-                inputMap["s"] = true;
-                inputMap["a"] = false;
-                inputMap["d"] = false;
-            }
-            if (movementJoystick.deltaPosition.x > 0.75) { inputMap["d"] = true; inputMap["a"] = false; inputMap["w"] = false; inputMap["s"] = false; }
-            if (movementJoystick.deltaPosition.x < -0.75) { inputMap["a"] = true; inputMap["d"] = false; inputMap["w"] = false; inputMap["s"] = false; }
+        const inputMap = getInputMap();
+        if (movementJoystick.deltaPosition.y > 0.4) {
+            inputMap["w"] = true;
+            inputMap["s"] = false;
+            inputMap["a"] = false;
+            inputMap["d"] = false;
+        }
+        if (movementJoystick.deltaPosition.y < -0.4) {
+            inputMap["w"] = false;
+            inputMap["s"] = true;
+            inputMap["a"] = false;
+            inputMap["d"] = false;
+        }
+        if (movementJoystick.deltaPosition.x > 0.75) { inputMap["d"] = true; inputMap["a"] = false; inputMap["w"] = false; inputMap["s"] = false; }
+        if (movementJoystick.deltaPosition.x < -0.75) { inputMap["a"] = true; inputMap["d"] = false; inputMap["w"] = false; inputMap["s"] = false; }
 
-            // if (movementJoystick.deltaPosition.y < -0.75 && movementJoystick.deltaPosition.x < -0.75) { inputMap["q"] = true; inputMap["e"] = false; inputMap["w"] = false; inputMap["s"] = true; }
+        // if (movementJoystick.deltaPosition.y > 0.4 && movementJoystick.deltaPosition.x > 0.75) { inputMap["e"] = true; inputMap["q"] = false; inputMap["w"] = false; inputMap["s"] = true; }
+        // if (movementJoystick.deltaPosition.y < -0.75 && movementJoystick.deltaPosition.x < -0.75) { inputMap["q"] = true; inputMap["e"] = false; inputMap["w"] = false; inputMap["s"] = true; }
 
 
-        } else {
-            if (CANVASES[1].style.zIndex !== "-1") { //Still allow keyboard interaction
-                inputMap["w"] = false;
-                inputMap["s"] = false;
-                inputMap["a"] = false;
-                inputMap["d"] = false;
-            }
-
+        if (movementJoystick.deltaPosition.x > -0.75 && movementJoystick.deltaPosition.x < 0.75 && movementJoystick.deltaPosition.y > -0.4 && movementJoystick.deltaPosition.y < 0.4) {
+            // no movement
+            inputMap["w"] = false;
+            inputMap["s"] = false;
+            inputMap["a"] = false;
+            inputMap["d"] = false;
         }
 
-        if (cameraJoystick.pressed) {
-            const rotateX = cameraJoystick.deltaPosition.x * 0.02;
-            const rotateY = cameraJoystick.deltaPosition.y * 0.041;
-            camera.alpha += rotateX;
-            if (camera.beta - rotateY >= (Math.PI / 2) * 0.01) {
-                camera.beta -= rotateY;
-            }
-        }
+
     });
 }

@@ -1,10 +1,17 @@
 import SceneManager from './src/scene/SceneManager.js';
+import { setSceneManager as setDamagePopupSceneManager } from './src/character/damagePopup.js';
+import { getRuntimeState, setSceneManager } from './src/core/runtimeState.js';
 
-import { setSceneManager } from './src/character/damagePopup.js';
+window.__RUNTIME_STATE__ = getRuntimeState();
 
 window.addEventListener('DOMContentLoaded', async function () {
-    SCENE_MANAGER = new SceneManager('renderCanvas');
-    await SCENE_MANAGER.start();
+    const sceneManager = new SceneManager('renderCanvas');
+    setSceneManager(sceneManager);
 
-    setSceneManager(SCENE_MANAGER);
+    // Deprecated compatibility bridge for legacy global access.
+    SCENE_MANAGER = sceneManager;
+
+    await sceneManager.start();
+
+    setDamagePopupSceneManager(sceneManager);
 });

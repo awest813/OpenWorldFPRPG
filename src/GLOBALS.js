@@ -1,23 +1,29 @@
-let DEBUG = false;
+/**
+ * @deprecated Global runtime values are being migrated to src/core/runtimeState.js.
+ * Keep this file as a temporary compatibility bridge for legacy modules that still
+ * rely on window-scoped identifiers.
+ */
 
-let SCENE_MANAGER = {};
+var DEBUG = false;
 
-let PLAYER = {};
-let DUMMY = {};
+var SCENE_MANAGER = {};
+
+var PLAYER = {};
+var DUMMY = {};
 
 var DMGPOP = {};
 
-let HPBAR = {};
+var HPBAR = {};
 
-let VFX = {};
+var VFX = {};
 
-let SHADERS = {};
-
-
-let GRID = {};
+var SHADERS = {};
 
 
-let MESH_LIBRARY = {};
+var GRID = {};
+
+
+var MESH_LIBRARY = {};
 // Contains:
 //   'Plants'
 //     'Grass'
@@ -28,25 +34,25 @@ let MESH_LIBRARY = {};
 //     'Roof'
 
 // array of 9 grids, to load in dynamically around the player
-let GRIDS;
+var GRIDS;
 
-let TOOLS;
+var TOOLS;
 
-let targetBaseOnCameraView = true; // if false target based on character rotation
+var targetBaseOnCameraView = true; // if false target based on character rotation
 // use touch joystick for mobile options
 
-let DYNAMIC_CAMERA = false;
+var DYNAMIC_CAMERA = false;
 // Used for game controller on pc and shows joystick on mobile.
-// Emulates KOA smooth camera follow effect  
-let ON_MOBILE = true
-let CANVASES = []; //One canvas For Game, one for Mobile Input Detection
+// Emulates KOA smooth camera follow effect
+var ON_MOBILE = true;
+var CANVASES = []; //One canvas For Game, one for Mobile Input Detection
 
 // todo move this from global. used for mobile input
-let inputMap = {};
+var inputMap = {};
 
 
-let FAST_RELOAD = false; //Enable for fast development, disable for prod 
+var FAST_RELOAD = false; //Enable for fast development, disable for prod
 
 
 // Graphics Settings
-let WEBGPU = false; //otherwise use WebGL
+var WEBGPU = false; //otherwise use WebGL
