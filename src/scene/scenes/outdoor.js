@@ -1,5 +1,5 @@
 import { loadHeroModel } from '../../character/hero.js';
-import { setupCamera } from '../../utils/camera.js';
+import { setupFpsCamera } from '../../utils/camera_fps.js';
 import { setupPhysics } from '../../utils/physics.js';
 import { setupInputHandling } from '../../movement.js';
 import { setupAnim } from '../../utils/anim.js';
@@ -19,15 +19,8 @@ export async function createOutdoor(engine) {
     const { character, dummyAggregate } = await setupPhysics(scene, spawnPoint);
     const terrain = setupTerrain(scene);
 
-    const camera = setupCamera(scene, character, engine);
-    camera.wheelDeltaPercentage = 0.0200;
-    // camera.upperBetaLimit = Math.PI / 2; // Stops at the horizon (90 degrees)
-    camera.upperBetaLimit = 3.13;
-    camera.lowerRadiusLimit = 4;  // Minimum distance to target (closest zoom)
-    camera.upperRadiusLimit = 656.8044;
-    camera.upperBetaLimit = Math.PI / 2; // Stops at the horizon (90 degrees)
-    camera.alpha = 4.954;
-    camera.beta = 1.3437;
+    const camera = setupFpsCamera(scene, character, engine);
+    scene.activeCamera = camera;
 
     // load all models, make sure parallel loading for speed
     const modelUrls = ["characters/enemy/slime/Slime1.glb", "characters/weapons/Sword2.glb", "util/HPBar.glb"];
