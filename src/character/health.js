@@ -32,10 +32,21 @@ export class Health {
             this.isAlive = false;
             this.die();
         }
-        this.healthBar.update(this.health, this.maxHealth);
+        if (this.healthBar) {
+            this.healthBar.update(this.health, this.maxHealth);
+        }
         if (this.name !== "Hero") {
             // this.parent.scaling.y = 3.55;
             // this.setupTimeout();
+        }
+    }
+
+
+    heal(amount) {
+        if (!this.isAlive) { return; }
+        this.health = Math.min(this.maxHealth, this.health + amount);
+        if (this.healthBar) {
+            this.healthBar.update(this.health, this.maxHealth);
         }
     }
 

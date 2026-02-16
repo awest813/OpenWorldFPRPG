@@ -10,6 +10,7 @@ import { loadModels } from '../../utils/load.js';
 import { setupEnemies } from '../../character/enemy.js';
 import { Health } from '../../character/health.js';
 import addSword from '../../character/equips/held.js';
+import { createProgressionState, getMaxHealthFromProgression } from '../../rpg/progression.js';
 
 export async function createOutdoor(engine) {
     const scene = new BABYLON.Scene(engine);
@@ -39,9 +40,11 @@ export async function createOutdoor(engine) {
 
     let anim = setupAnim(scene, skeleton);
     setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate);
-    character.health = new Health("Hero", 100, dummyAggregate);
+    const progression = createProgressionState({ race: 'nord', level: 1 });
+    character.health = new Health("Hero", getMaxHealthFromProgression(progression), dummyAggregate);
     character.health.rotationCheck = hero;
     character.health.rangeCheck = character;
+    character.health.progression = progression;
     PLAYER = character;
 
     // Todo: add shadow and post toggles in settings

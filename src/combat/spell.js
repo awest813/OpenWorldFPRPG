@@ -7,16 +7,18 @@ import { Projectile } from "./visual/projectile.js";
 // cause damage in area (apply affect to area
 
 export class Spell {
-    constructor(name, effects, animation, vfx, range) {
+    constructor(name, effects, animation, vfx, range, skill = "oneHanded") {
         this.name = name;
         this.effects = effects; // Array of effects
         this.animation = animation; // Animation object or string
         this.vfx = vfx; // Visual effects object or string
         this.range = range;
+        this.skill = skill;
         this.facingThreshold = 0.507; // 0.707, 45 degrees threshold 
     }
 
     canCast(caster, target) {
+        if (!caster || !target) return false;
 
         if (caster.parent && caster.name != 'Hero') {
             caster.rotationCheck = caster.parent;
@@ -27,6 +29,7 @@ export class Spell {
         }
 
         target = target.parent;
+        if (!target) return false;
 
 
         // console.log(caster);
@@ -52,8 +55,13 @@ export class Spell {
         this.playAnimation(caster);
         // on animation end or projectile hit, play effect
         this.effects.forEach(effect => {
-            effect.apply(target);
+            effect.apply(target, {
+                spellName: this.name,
+                skill: this.skill,
+                caster
+            });
         });
+        return true;
     }
 
     playAnimation(caster) {
@@ -74,4 +82,3 @@ export class Spell {
         // VFX logic here
     }
 }
-
