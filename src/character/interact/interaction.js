@@ -144,11 +144,14 @@ export function createInteractionController(scene, options = {}) {
 
         if (handler) {
             handler({ mesh, pickInfo, interactable, scene });
-            return true;
         }
 
         if (typeof interactable.onInteract === "function") {
             interactable.onInteract({ mesh, pickInfo, interactable, scene });
+            return true;
+        }
+
+        if (handler) {
             return true;
         }
 
