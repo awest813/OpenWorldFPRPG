@@ -65,29 +65,58 @@ export function createMobileControls(scene, camera, player) {
 
 
 
-    // Add an action button for jumping
-    const jumpButton = document.createElement('button');
-    jumpButton.innerText = 'Jump';
-    jumpButton.style.position = 'absolute';
-    jumpButton.style.bottom = '20px';
-    jumpButton.style.right = '20px';
-    jumpButton.style.width = '100px';
-    jumpButton.style.height = '50px';
-    jumpButton.style.zIndex = '2';
+    const controlsHint = document.createElement('div');
+    controlsHint.innerHTML = '<strong>Mobile Controls</strong><br>Left stick: Move<br>Quick: Attack<br>Heavy: Power';
+    controlsHint.style.position = 'fixed';
+    controlsHint.style.top = '12px';
+    controlsHint.style.left = '12px';
+    controlsHint.style.padding = '8px 10px';
+    controlsHint.style.color = '#ffffff';
+    controlsHint.style.background = 'rgba(0, 0, 0, 0.55)';
+    controlsHint.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+    controlsHint.style.borderRadius = '6px';
+    controlsHint.style.fontFamily = 'Open Sans, Helvetica Neue, sans-serif';
+    controlsHint.style.fontSize = '12px';
+    controlsHint.style.lineHeight = '1.5';
+    controlsHint.style.zIndex = '20';
+
+    const quickAttackButton = document.createElement('button');
+    quickAttackButton.innerText = 'Attack';
+    quickAttackButton.style.position = 'absolute';
+    quickAttackButton.style.bottom = '20px';
+    quickAttackButton.style.right = '20px';
+    quickAttackButton.style.width = '100px';
+    quickAttackButton.style.height = '50px';
+    quickAttackButton.style.zIndex = '2';
+
+    const heavyAttackButton = document.createElement('button');
+    heavyAttackButton.innerText = 'Power';
+    heavyAttackButton.style.position = 'absolute';
+    heavyAttackButton.style.bottom = '80px';
+    heavyAttackButton.style.right = '20px';
+    heavyAttackButton.style.width = '100px';
+    heavyAttackButton.style.height = '50px';
+    heavyAttackButton.style.zIndex = '2';
 
 
 
 
 
-    // Append the button to the body
-    document.body.appendChild(jumpButton);
+    document.body.appendChild(controlsHint);
+    document.body.appendChild(quickAttackButton);
+    document.body.appendChild(heavyAttackButton);
 
-    // Add event listener for the jump button
-    jumpButton.addEventListener('touchstart', () => {
-        // Example jump logic
-        if (player.physicsImpostor) {
-            const jumpForce = new BABYLON.Vector3(0, 10, 0);
-            player.physicsImpostor.applyImpulse(jumpForce, player.getAbsolutePosition());
+    quickAttackButton.addEventListener('touchstart', (event) => {
+        event.preventDefault();
+        if (typeof window.onQuickAttack === 'function') {
+            window.onQuickAttack();
+        }
+    });
+
+    heavyAttackButton.addEventListener('touchstart', (event) => {
+        event.preventDefault();
+        if (typeof window.onHeavyAttack === 'function') {
+            window.onHeavyAttack();
         }
     });
 
@@ -95,13 +124,13 @@ export function createMobileControls(scene, camera, player) {
 
     scene.onBeforeRenderObservable.add(() => {
         const inputMap = getInputMap();
-        if (movementJoystick.deltaPosition.y > 0.4) {
+        if (movementJoystick.deltaPosition.y < -0.4) {
             inputMap["w"] = true;
             inputMap["s"] = false;
             inputMap["a"] = false;
             inputMap["d"] = false;
         }
-        if (movementJoystick.deltaPosition.y < -0.4) {
+        if (movementJoystick.deltaPosition.y > 0.4) {
             inputMap["w"] = false;
             inputMap["s"] = true;
             inputMap["a"] = false;

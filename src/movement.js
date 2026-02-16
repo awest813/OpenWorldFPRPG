@@ -9,6 +9,9 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
     inputMap = nextInputMap;
     const interactionController = createInteractionController(scene, { maxDistance: 6 });
     window.onPlayerInteract = interactionController.interact;
+    window.onQuickAttack = () => castMeleeSpellWithResolver(SPELLS.quickSwing, QUICK_SWING_COOLDOWN_MS);
+    window.onHeavyAttack = () => castMeleeSpellWithResolver(SPELLS.heavySwing, HEAVY_SWING_COOLDOWN_MS);
+    ensureControlsLegend();
     scene.actionManager = new BABYLON.ActionManager(scene);
     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
         var key = evt.sourceEvent.key;
@@ -152,6 +155,42 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
         // character.target = character.position;
 
     });
+}
+
+function ensureControlsLegend() {
+    if (document.getElementById("controlsLegend")) {
+        return;
+    }
+
+    const legend = document.createElement("div");
+    legend.id = "controlsLegend";
+    legend.innerHTML = [
+        "<strong>Controls</strong>",
+        "Move: WASD / Arrow Keys",
+        "Quick Attack: Left Click",
+        "Heavy Attack: Right Click",
+        "Cast Fireball: Q",
+        "Interact: E",
+        "Sprint Toggle: F"
+    ].join("<br>");
+
+    Object.assign(legend.style, {
+        position: "fixed",
+        top: "12px",
+        left: "12px",
+        padding: "8px 10px",
+        color: "#ffffff",
+        background: "rgba(0, 0, 0, 0.55)",
+        border: "1px solid rgba(255, 255, 255, 0.2)",
+        borderRadius: "6px",
+        fontFamily: "Open Sans, Helvetica Neue, sans-serif",
+        fontSize: "12px",
+        lineHeight: "1.5",
+        zIndex: "20",
+        pointerEvents: "none"
+    });
+
+    document.body.appendChild(legend);
 }
 
 function castSpellOnCurrentTarget(spell) {
