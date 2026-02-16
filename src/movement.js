@@ -20,6 +20,21 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
 
     // Function to get canvas-relative touch position
     const canvas = document.getElementById("renderCanvas");
+    canvas.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+    });
+    canvas.addEventListener("mousedown", (event) => {
+        if (event.button === 0) {
+            castSpellOnCurrentTarget(SPELLS.quickSwing);
+            return;
+        }
+
+        if (event.button === 2) {
+            event.preventDefault();
+            castSpellOnCurrentTarget(SPELLS.heavySwing);
+        }
+    });
+
     function getCanvasRelativePosition(event) {
         const rect = canvas.getBoundingClientRect();
         const touch = event.touches[0]; // Get the first touch
@@ -112,6 +127,24 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
         // character.target = character.position;
 
     });
+}
+
+function castSpellOnCurrentTarget(spell) {
+    if (!PLAYER?.target?.health || !PLAYER?.health) {
+        return;
+    }
+
+    if (targetBaseOnCameraView) {
+        rotateToTarget();
+    }
+
+    spell.cast(PLAYER.health, PLAYER.target.health);
+}
+
+function triggerInteractAction() {
+    if (typeof window.onPlayerInteract === "function") {
+        window.onPlayerInteract();
+    }
 }
 
 function handleGamepadInput(gamepad, character) {
@@ -217,15 +250,11 @@ window.addEventListener('keydown', onKeyDown);
 function onKeyDown(event) {
     if (event.key === "f") SPRINTING = !SPRINTING;
     // if (event.key === "Shift"){} SPRINTING = !SPRINTING;
-    if (event.key === "4") {
-        DoCombo();
+    if (event.key === "q") {
+        castSpellOnCurrentTarget(SPELLS.fireball);
     }
-    if (event.key === "5" && PLAYER.target?.health) {
-        SPELLS.heavySwing.cast(PLAYER.health, PLAYER.target.health);
-
-    }
-    if (event.key === "c" && PLAYER.target?.health) {
-        SPELLS.fireball.cast(PLAYER.health, PLAYER.target.health);
+    if (event.key === "e") {
+        triggerInteractAction();
     }
 
 }
@@ -318,7 +347,7 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
             anim.Running.start(true, 1.1, anim.Running.from, anim.Running.to, false);
         }
     }
-    if (inputMap["q"] || inputMap["ArrowLeft"]) {
+    if (inputMap["a"] || inputMap["ArrowLeft"]) {
         moveDirection.subtractInPlace(right.scaleInPlace(0.7));
         hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
         var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI / 2, 0, 0);
@@ -332,7 +361,7 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
             anim.Running.start(true, 1.1, anim.Running.from, anim.Running.to, false);
         }
     }
-    if (inputMap["e"] || inputMap["ArrowRight"]) {
+    if (inputMap["d"] || inputMap["ArrowRight"]) {
         moveDirection.addInPlace(right.scaleInPlace(0.7));
         hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
         var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(-Math.PI / 2, 0, 0);
@@ -348,7 +377,7 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
     }
 
     // do for all four directions
-    if (inputMap["q"] && inputMap["w"]) {
+    if (inputMap["a"] && inputMap["w"]) {
         hero.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngle, 3.14, 0);
         var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(3 * Math.PI / 4, 0, 0);
         hero.rotationQuaternion = rotationQuaternion.multiply(hero.rotationQuaternion);
@@ -390,7 +419,7 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
 
 
 
-    if (!inputMap["w"] && !inputMap["s"] && !inputMap["q"] && !inputMap["e"] && !SPRINTING && !mobileMoving) {
+    if (!inputMap["w"] && !inputMap["s"] && !inputMap["a"] && !inputMap["d"] && !SPRINTING && !mobileMoving) {
         //Default animation is idle when no key is down   
 
         // anim.BreathingIdle.start(true, 1.0, anim.BreathingIdle.from, anim.BreathingIdle.to, true);
@@ -424,68 +453,6 @@ function handleCharacterMovement(inputMap, character, camera, hero, anim, engine
 
 
 
-
-    let combo1length = anim.Combo.from + 60;
-    let combo2length = anim.Combo.from + 110;
-    // combo
-    if (inputMap["4"] || mouseIsActive && !thirdAttack) {
-        anim.BreathingIdle.stop();
-        anim.Running.stop();
-        if (!anim.Roll.isPlaying && !anim.Running.isPlaying) {
-            for (let key in anim) {
-                if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                    if (key !== 'Combo') anim[key].stop();
-                }
-            }
-
-
-            if (combo === 1) {
-                // anim.Combo.start(false, 1.8, combo1length -5, combo2length, true);
-                combo += 1;
-            }
-            if (combo === 2) {
-                anim.Combo.start(false, 1.6, combo2length, anim.Combo.to - 65, true);
-            }
-            if (combo === 3) {
-                anim.Combo.start(false, 1.6, anim.Combo.from + 25, combo1length, true);
-
-                combo = 0;
-            }
-
-
-        }
-    }
-
-
-    // todo replace input map with keyrebind
-    // todo replace with spell system. 
-    if (inputMap["5"] || thirdAttack) {
-        anim.BreathingIdle.stop();
-        anim.Running.stop();
-        if (!anim.Roll.isPlaying && !anim.Running.isPlaying) {
-            for (let key in anim) {
-                if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                    if (key !== 'Attack') anim[key].stop();
-                }
-            }
-            anim.Attack.start(false, 1.3, anim.Attack.from, anim.Attack.to - 20, true);
-
-            // spawn effect
-        }
-    }
-
-    if (inputMap["c"]) {
-        // anim.Running.stop();
-        if (!anim.Roll.isPlaying && !anim.Running.isPlaying) {
-            for (let key in anim) {
-                if (anim.hasOwnProperty(key) && anim[key].isPlaying) {
-                    if (key !== 'SelfCast') anim[key].stop();
-                }
-            }
-            // anim.SelfCast.play();
-            anim.SelfCast.start(false, 1.0, anim.SelfCast.from, anim.SelfCast.to - 50, true);
-        }
-    }
 
     if (inputMap[" "]) {
         anim.BreathingIdle.stop();
