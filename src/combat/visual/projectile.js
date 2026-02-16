@@ -1,3 +1,4 @@
+import { getSceneManager } from '../../core/runtimeState.js';
 export class Projectile {
     constructor(growthDuration, moveToTargetDuration, offset) {
         this.growthDuration = growthDuration;
@@ -15,7 +16,8 @@ export class Projectile {
 
     cloneProjectile(fireorb, caster) {
         const clonedProjectile = fireorb.clone("clonedFireorb");
-        SCENE_MANAGER.activeScene.addMesh(clonedProjectile);
+        const sceneManager = getSceneManager();
+        sceneManager?.activeScene?.addMesh(clonedProjectile);
         clonedProjectile.position = caster.parent.transformNode._absolutePosition;
         clonedProjectile.position.x = clonedProjectile.position.x + this.offset.x;
         clonedProjectile.position.y = clonedProjectile.position.y + this.offset.y;
@@ -54,7 +56,8 @@ export class Projectile {
     }
 
     moveToTarget(object, target) {
-        const trail = new BABYLON.TrailMesh("trail", object, SCENE_MANAGER.activeScene, 0.5, 120, true);
+        const sceneManager = getSceneManager();
+        const trail = new BABYLON.TrailMesh("trail", object, sceneManager?.activeScene, 0.5, 120, true);
         trail.diameter = 0.5;
         trail.material = SHADERS['fireTrailShader'];
         trail.alphaIndex = 0;

@@ -1,3 +1,4 @@
+import { getDebug, getFastReload, setDebug } from '../core/runtimeState.js';
 import { createNight } from './scenes/night.js';
 import { createDayDynamicTerrain } from './scenes/day.js';
 import { createOutdoor } from './scenes/outdoor.js';
@@ -29,7 +30,7 @@ class SceneManager {
   }
 
   logDebug(message, data = null) {
-    if (!DEBUG) {
+    if (!getDebug()) {
       return;
     }
 
@@ -63,7 +64,7 @@ class SceneManager {
 
     if (this.activeScene) {
       this.engine.stopRenderLoop();
-      if (DEBUG) this.activeScene.debugLayer.hide();
+      if (getDebug()) this.activeScene.debugLayer.hide();
       //   this.activeScene.dispose(); // Optional: dispose only if not planning to return to this scene
     }
     this.activeScene = this.scenes[index];
@@ -73,7 +74,7 @@ class SceneManager {
       this.activeScene.render();
     });
 
-    if (DEBUG) this.activeScene.debugLayer.show();
+    if (getDebug()) this.activeScene.debugLayer.show();
   }
 
   // todo map of scenes near the current scene
@@ -81,7 +82,7 @@ class SceneManager {
   async start() {
 
     let timeout = 100;
-    if (!FAST_RELOAD) timeout = 1000;
+    if (!getFastReload()) timeout = 1000;
     setTimeout(() => {
       this.canvas.classList.add('visible');
     }, timeout);
@@ -89,7 +90,11 @@ class SceneManager {
     const urlParams = new URLSearchParams(window.location.search);
 
     const debugParam = urlParams.get('debug');
-    if (debugParam === 'true') { DEBUG = true; }
+    if (debugParam === 'true') {
+      setDebug(true);
+      // Deprecated compatibility bridge for legacy global access.
+      DEBUG = true;
+    }
     this.logDebug('Debug mode enabled through URL parameter');
 
     const sceneParam = urlParams.get('scene');

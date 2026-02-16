@@ -1,3 +1,4 @@
+import { getOnMobile } from '../../../../core/runtimeState.js';
 import { updateGrassThin } from "../../../../utils/plants/plants.js";
 import { cellSize, gridConfig, gridSize } from "./constants.js";
 import { updateCellAndSurronding, removeAllWalls, createGridTracker } from "./gridTracker.js";
@@ -67,7 +68,7 @@ export function createGridInput(scene, meshes, grid, tools) {
 
     // Grid Input Actions //
     grid.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, (evt) => {
-        if (ON_MOBILE) {
+        if (getOnMobile()) {
             const { width, height } = scene.getEngine().getRenderingCanvas();
             if (evt.pointerY >= height * 0.6) {
                 console.log("clicked bottom");
@@ -146,7 +147,7 @@ export function createGridInput(scene, meshes, grid, tools) {
     //  Grid Pointer Held //
     let leftHeldDown = false;
     scene.onPointerObservable.add((pointerInfo) => {
-        if (ON_MOBILE) {
+        if (getOnMobile()) {
             const { width, height } = scene.getEngine().getRenderingCanvas();
             if (pointerInfo.event.clientY >= height * 0.6) {
                 console.log("clicked bottom");

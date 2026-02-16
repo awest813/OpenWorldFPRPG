@@ -1,3 +1,4 @@
+import { setPlayer } from '../../core/runtimeState.js';
 import { loadHeroModel } from '../../character/hero.js';
 import { setupCamera } from '../../utils/camera.js';
 import { setupPhysics } from '../../utils/physics.js';
@@ -45,6 +46,7 @@ export async function createNight(engine) {
     character.health = new Health("Hero", 100, dummyAggregate);
     character.health.rotationCheck = hero;
     character.health.rangeCheck = character;
+    setPlayer(character);
     PLAYER = character;
 
     camera.alpha = 5.3805;

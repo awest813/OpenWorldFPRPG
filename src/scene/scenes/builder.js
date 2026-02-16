@@ -1,3 +1,4 @@
+import { getFastReload, setDummy, setPlayer } from '../../core/runtimeState.js';
 import { loadHeroModel } from '../../character/hero.js';
 import { setupCamera } from '../../utils/camera.js';
 import { setupPhysics } from '../../utils/physics.js';
@@ -31,7 +32,7 @@ export async function createBuilder(engine) {
     const camera = setupCamera(scene, character, engine);
     camera.collisionRadius = new BABYLON.Vector3(12.5, 12.5, 12.5);
 
-    if (!FAST_RELOAD) {
+    if (!getFastReload()) {
         // load all models, make sure parallel loading for speed
         const modelUrls = [
             "env/builder/parts.glb", "env/exterior/grass/grass.glb"];
@@ -49,7 +50,9 @@ export async function createBuilder(engine) {
         character.health = new Health("Hero", 100, dummyAggregate);
         character.health.rotationCheck = hero;
         character.health.rangeCheck = character;
+        setPlayer(character);
         PLAYER = character;
+        setDummy(dummyAggregate);
         DUMMY = dummyAggregate;
 
         setupEnvironment(scene);

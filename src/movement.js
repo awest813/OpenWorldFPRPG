@@ -1,16 +1,20 @@
+import { getInputMap, getPlayer, setInputMap, setPlayer } from './core/runtimeState.js';
 import { SPELLS } from './combat/SPELLS.js';
 import { createInteractionController } from './character/interact/interaction.js';
 import { isMeleeTargetingDebugEnabled, resolveMeleeTarget, setMeleeTargetingDebugEnabled } from './combat/meleeTargetResolver.js';
 
 export function setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate) {
-    inputMap = {};
+    const nextInputMap = {};
+    setInputMap(nextInputMap);
+    inputMap = nextInputMap;
     const interactionController = createInteractionController(scene, { maxDistance: 6 });
     window.onPlayerInteract = interactionController.interact;
     scene.actionManager = new BABYLON.ActionManager(scene);
     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
         var key = evt.sourceEvent.key;
         const normalizedKey = key.match(/[a-zA-Z]/) ? key.toLowerCase() : key;
-        inputMap[normalizedKey] = evt.sourceEvent.type === "keydown";
+        const currentInputMap = getInputMap();
+        currentInputMap[normalizedKey] = evt.sourceEvent.type === "keydown";
 
         if (evt.sourceEvent.repeat) {
             return;
@@ -27,11 +31,12 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
         // inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keydown";
         var key = evt.sourceEvent.key;
-        inputMap[key.match(/[a-zA-Z]/) ? key.toLowerCase() : key] = evt.sourceEvent.type === "keydown";
+        const currentInputMap = getInputMap();
+        currentInputMap[key.match(/[a-zA-Z]/) ? key.toLowerCase() : key] = evt.sourceEvent.type === "keydown";
         // console.log(evt.sourceEvent.key);
     }));
     scene.onBeforeRenderObservable.add(() => {
-        handleCharacterMovement(inputMap, character, camera, hero, anim, engine, dummyAggregate);
+        handleCharacterMovement(getInputMap(), character, camera, hero, anim, engine, dummyAggregate);
         interactionController.poll();
     });
 
@@ -150,7 +155,8 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
 }
 
 function castSpellOnCurrentTarget(spell) {
-    if (!PLAYER?.target?.health || !PLAYER?.health) {
+    const player = getPlayer();
+    if (!player?.target?.health || !player?.health) {
         return;
     }
 
@@ -158,11 +164,12 @@ function castSpellOnCurrentTarget(spell) {
         rotateToTarget();
     }
 
-    spell.cast(PLAYER.health, PLAYER.target.health);
+    spell.cast(player.health, player.target.health);
 }
 
 function castMeleeSpellWithResolver(spell, cooldownMs) {
-    if (!PLAYER?.health || !spell) {
+    const player = getPlayer();
+    if (!player?.health || !spell) {
         return false;
     }
 
@@ -177,13 +184,15 @@ function castMeleeSpellWithResolver(spell, cooldownMs) {
         return false;
     }
 
-    PLAYER.target = target;
+    player.target = target;
+    setPlayer(player);
+    PLAYER = player;
 
     if (targetBaseOnCameraView) {
         rotateToTarget();
     }
 
-    const didCast = spell.cast(PLAYER.health, target.health);
+    const didCast = spell.cast(player.health, target.health);
     if (didCast) {
         meleeCastTimesBySpell.set(spell.name, now);
     }
@@ -191,17 +200,18 @@ function castMeleeSpellWithResolver(spell, cooldownMs) {
 }
 
 function resolveMeleeSpellTarget(spell) {
-    if (!PLAYER?.position) {
+    const player = getPlayer();
+    if (!player?.position) {
         return null;
     }
 
-    const activeCamera = PLAYER.scene?.activeCamera;
+    const activeCamera = player.scene?.activeCamera;
     if (!activeCamera) {
         return null;
     }
 
     const cameraForward = activeCamera.getFrontPosition(1).subtract(activeCamera.position).normalize();
-    return resolveMeleeTarget(PLAYER.scene, PLAYER.position, cameraForward, {
+    return resolveMeleeTarget(player.scene, player.position, cameraForward, {
         maxDistance: Math.min(spell.range, attackDistance),
         coneDotThreshold: MELEE_TARGET_CONE_DOT_THRESHOLD
     });
@@ -310,12 +320,16 @@ function handleClick() {
 
 
 function rotateToTarget() {
-    var forwardTarget = PLAYER.target.position.subtract(PLAYER.position).normalize();
+    const player = getPlayer();
+    if (!player?.target?.position || !player?.position || !player?.health?.rotationCheck) {
+        return;
+    }
+    var forwardTarget = player.target.position.subtract(player.position).normalize();
     forwardTarget.y = 0;  // Ensure the player only moves horizontally
     var forwardAngleTarget = Math.atan2(forwardTarget.x, forwardTarget.z);
-    PLAYER.health.rotationCheck.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngleTarget, 3.14, 0);
+    player.health.rotationCheck.rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(forwardAngleTarget, 3.14, 0);
     var rotationQuaternion = BABYLON.Quaternion.RotationYawPitchRoll(Math.PI, 0, 0);
-    PLAYER.health.rotationCheck.rotationQuaternion = rotationQuaternion.multiply(PLAYER.health.rotationCheck.rotationQuaternion);
+    player.health.rotationCheck.rotationQuaternion = rotationQuaternion.multiply(player.health.rotationCheck.rotationQuaternion);
     // shouldRotateToTarget = false;
 }
 let shouldRotateToTarget = false;
