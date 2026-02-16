@@ -16,7 +16,30 @@ You can add [`&debug=true`](https://rpgskilltreegenerator.com/RPG/index.html?sce
 
 When debug mode is enabled, `SceneManager` now prints tagged logs in the browser console to help track scene selection, scene switching, and load timing.
 
+`SceneManager` now also reports lightweight scene-cache telemetry in debug mode, including scene count, GUI texture count, and a simple memory-pressure hint (low/medium/high).
+
 You can view the full scene list in [`SceneManager.js`](/src/scene/SceneManager.js). 
+
+### Scene Lifecycle and Caching Policy
+- Scenes are now cached with a policy map (`defaultScenePolicy` + `scenePolicyMap`) in `SceneManager`.
+- On scene switch, the previous scene is disposed when it is non-persistent and marked `evictOnLeave`.
+- Disposal includes both the Babylon scene (`scene.dispose()`) and its associated fullscreen GUI texture.
+- Cache size is managed with `maxCachedScenes` to reduce long-session memory growth.
+
+To keep a scene loaded across switches, mark it as persistent in `src/scene/SceneManager.js`:
+
+```js
+this.scenePolicyMap = {
+  outdoor: { persistent: true, evictOnLeave: false }
+};
+```
+
+To preload scenes without immediately rendering them:
+
+```js
+await sceneManager.preloadScene('inn');
+await sceneManager.preloadScenes(['town', 'builder']);
+```
 
 ### Canonical Scene Entrypoints
 `src/scene/SceneManager.js` is the source of truth for scene query names and their creator functions:
