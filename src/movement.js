@@ -220,11 +220,11 @@ function onKeyDown(event) {
     if (event.key === "4") {
         DoCombo();
     }
-    if (event.key === "5") {
+    if (event.key === "5" && PLAYER.target?.health) {
         SPELLS.heavySwing.cast(PLAYER.health, PLAYER.target.health);
 
     }
-    if (event.key === "c") {
+    if (event.key === "c" && PLAYER.target?.health) {
         SPELLS.fireball.cast(PLAYER.health, PLAYER.target.health);
     }
 

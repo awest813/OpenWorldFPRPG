@@ -1,4 +1,5 @@
 import { Health } from '../character/health.js';
+import { awardSkillXp, getCombatScalar } from '../rpg/progression.js';
 
 export class Effect {
     constructor(type, value) {
@@ -6,13 +7,15 @@ export class Effect {
         this.value = value;
     }
 
-    apply(target) {
+    apply(target, context = {}) {
         if (target instanceof Health) {
             switch (this.type) {
                 case 'damage':
                     const randomValue = Math.floor(Math.random() * 3);
-                    // Add this random value to 'this.value' and pass it to the 'takeDamage' method
-                    target.takeDamage(this.value + randomValue);
+                    const casterProgression = context.caster?.progression;
+                    const scalar = getCombatScalar(casterProgression, context.skill);
+                    target.takeDamage(Math.round((this.value + randomValue) * scalar));
+                    awardSkillXp(casterProgression, context.skill, 5);
                     break;
                 case 'heal':
                     target.heal(this.value);
