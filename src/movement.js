@@ -1,11 +1,23 @@
 import { SPELLS } from './combat/SPELLS.js';
+import { createInteractionController } from './character/interact/interaction.js';
 
 export function setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate) {
     inputMap = {};
+    const interactionController = createInteractionController(scene, { maxDistance: 6 });
+    window.onPlayerInteract = interactionController.interact;
     scene.actionManager = new BABYLON.ActionManager(scene);
     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
         var key = evt.sourceEvent.key;
-        inputMap[key.match(/[a-zA-Z]/) ? key.toLowerCase() : key] = evt.sourceEvent.type === "keydown";
+        const normalizedKey = key.match(/[a-zA-Z]/) ? key.toLowerCase() : key;
+        inputMap[normalizedKey] = evt.sourceEvent.type === "keydown";
+
+        if (evt.sourceEvent.repeat) {
+            return;
+        }
+
+        if (normalizedKey === "f") SPRINTING = !SPRINTING;
+        if (normalizedKey === "q") castSpellOnCurrentTarget(SPELLS.fireball);
+        if (normalizedKey === "e") triggerInteractAction();
     }));
     scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
         // inputMap[evt.sourceEvent.key] = evt.sourceEvent.type === "keydown";
@@ -13,7 +25,10 @@ export function setupInputHandling(scene, character, camera, hero, anim, engine,
         inputMap[key.match(/[a-zA-Z]/) ? key.toLowerCase() : key] = evt.sourceEvent.type === "keydown";
         // console.log(evt.sourceEvent.key);
     }));
-    scene.onBeforeRenderObservable.add(() => handleCharacterMovement(inputMap, character, camera, hero, anim, engine, dummyAggregate));
+    scene.onBeforeRenderObservable.add(() => {
+        handleCharacterMovement(inputMap, character, camera, hero, anim, engine, dummyAggregate);
+        interactionController.poll();
+    });
 
 
     // todo move to own function
@@ -245,19 +260,6 @@ function handleClick() {
 // mousedown versus click
 // document.getElementById("renderCanvas").addEventListener('click', handleClick);
 
-
-window.addEventListener('keydown', onKeyDown);
-function onKeyDown(event) {
-    if (event.key === "f") SPRINTING = !SPRINTING;
-    // if (event.key === "Shift"){} SPRINTING = !SPRINTING;
-    if (event.key === "q") {
-        castSpellOnCurrentTarget(SPELLS.fireball);
-    }
-    if (event.key === "e") {
-        triggerInteractAction();
-    }
-
-}
 
 function rotateToTarget() {
     var forwardTarget = PLAYER.target.position.subtract(PLAYER.position).normalize();
