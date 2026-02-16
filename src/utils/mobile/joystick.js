@@ -38,8 +38,8 @@ export function createMobileControls(scene, camera, player) {
             CANVASES[1].style.zIndex = -1;
             inputMap["w"] = false;
             inputMap["s"] = false;
-            inputMap["q"] = false;
-            inputMap["e"] = false;
+            inputMap["a"] = false;
+            inputMap["d"] = false;
 
             // Dispatch a click event on the first canvas at the same position
             const clickEvent = new MouseEvent('click', {
@@ -100,17 +100,17 @@ export function createMobileControls(scene, camera, player) {
             if (movementJoystick.deltaPosition.y > 0.5) {
                 inputMap["w"] = true;
                 inputMap["s"] = false;
-                inputMap["q"] = false;
-                inputMap["e"] = false;
+                inputMap["a"] = false;
+                inputMap["d"] = false;
             }
             if (movementJoystick.deltaPosition.y < -0.5) {
                 inputMap["w"] = false;
                 inputMap["s"] = true;
-                inputMap["q"] = false;
-                inputMap["e"] = false;
+                inputMap["a"] = false;
+                inputMap["d"] = false;
             }
-            if (movementJoystick.deltaPosition.x > 0.75) { inputMap["e"] = true; inputMap["q"] = false; inputMap["w"] = false; inputMap["s"] = false; }
-            if (movementJoystick.deltaPosition.x < -0.75) { inputMap["q"] = true; inputMap["e"] = false; inputMap["w"] = false; inputMap["s"] = false; }
+            if (movementJoystick.deltaPosition.x > 0.75) { inputMap["d"] = true; inputMap["a"] = false; inputMap["w"] = false; inputMap["s"] = false; }
+            if (movementJoystick.deltaPosition.x < -0.75) { inputMap["a"] = true; inputMap["d"] = false; inputMap["w"] = false; inputMap["s"] = false; }
 
             // if (movementJoystick.deltaPosition.y < -0.75 && movementJoystick.deltaPosition.x < -0.75) { inputMap["q"] = true; inputMap["e"] = false; inputMap["w"] = false; inputMap["s"] = true; }
 
@@ -119,8 +119,8 @@ export function createMobileControls(scene, camera, player) {
             if (CANVASES[1].style.zIndex !== "-1") { //Still allow keyboard interaction
                 inputMap["w"] = false;
                 inputMap["s"] = false;
-                inputMap["q"] = false;
-                inputMap["e"] = false;
+                inputMap["a"] = false;
+                inputMap["d"] = false;
             }
 
         }
