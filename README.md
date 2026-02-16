@@ -18,6 +18,26 @@ When debug mode is enabled, `SceneManager` now prints tagged logs in the browser
 
 You can view the full scene list in [`SceneManager.js`](/src/scene/SceneManager.js). 
 
+### Canonical Scene Entrypoints
+`src/scene/SceneManager.js` is the source of truth for scene query names and their creator functions:
+
+- `night` → `createNight` (`src/scene/scenes/night.js`)
+- `day` → `createDayDynamicTerrain` (`src/scene/scenes/day.js`)
+- `outdoor` → `createOutdoor` (`src/scene/scenes/outdoor.js`)
+- `room` → `createRoom` (`src/scene/scenes/room.js`)
+- `underground` → `createUnderground` (`src/scene/scenes/underground.js`)
+- `town` → `createTown` (`src/scene/scenes/town.js`)
+- `roomGI` → `createRoomGI` (`src/scene/scenes/roomGI.js`)
+- `inn` → `createInn` (`src/scene/scenes/inn.js`)
+- `builder` → `createBuilder` (`src/scene/scenes/builder.js`)
+
+### Scene Import Integrity Check
+Run this quick static check to validate relative import paths used by files in `src/scene/scenes`:
+
+```bash
+node scripts/check-scene-imports.mjs
+```
+
 ## Run Locally
 `git clone` the repo.
 
