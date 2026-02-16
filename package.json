@@ -1,0 +1,12 @@
+{
+  "name": "openworldfprpg",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.2"
+  }
+}
