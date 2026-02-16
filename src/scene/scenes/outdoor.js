@@ -4,16 +4,18 @@ import { setupFpsCamera } from '../../utils/camera_fps.js';
 import { setupPhysics } from '../../utils/physics.js';
 import { setupInputHandling } from '../../movement.js';
 import { setupAnim } from '../../utils/anim.js';
-import { setupWater } from '../../utils/water.js';
 
 import { loadModels } from '../../utils/load.js';
 
-import { setupEnemies } from '../../character/enemy.js';
 import { Health } from '../../character/health.js';
 import addSword from '../../character/equips/held.js';
 import { createProgressionState, getMaxHealthFromProgression } from '../../rpg/progression.js';
-import { markMeshAsInteractable } from '../../character/interact/interaction.js';
 import { getLoopState } from '../../rpg/loopState.js';
+import { setupOutdoorEnvironment } from './outdoor/setupEnvironment.js';
+import { setupOutdoorLighting, setupOutdoorShadows } from './outdoor/setupLighting.js';
+import { setupOutdoorQuestActors } from './outdoor/setupQuestActors.js';
+import { setupOutdoorTerrain } from './outdoor/setupTerrain.js';
+import { setupOutdoorWater } from './outdoor/setupWater.js';
 
 export async function createOutdoor(engine) {
     const scene = new BABYLON.Scene(engine);
@@ -21,7 +23,7 @@ export async function createOutdoor(engine) {
 
     const spawnPoint = new BABYLON.Vector3(134.683, 80, -271.427);
     const { character, dummyAggregate } = await setupPhysics(scene, spawnPoint);
-    const terrain = setupTerrain(scene);
+    const terrain = setupOutdoorTerrain(scene);
 
     const camera = setupFpsCamera(scene, character, engine);
     scene.activeCamera = camera;
@@ -46,15 +48,14 @@ export async function createOutdoor(engine) {
 
     // Todo: add shadow and post toggles in settings
     // Defer non-critical operations
-    setupEnvironment(scene);
-    createSkydome(scene);
+    setupOutdoorEnvironment(scene);
 
-    setupWater(scene, terrain, engine, hero, 12.16, 8000);
+    setupOutdoorWater({ scene, terrain, engine, hero });
 
-    const light = setupLighting(scene);
+    const light = setupOutdoorLighting(scene);
 
 
-    setupShadows(light, hero);
+    setupOutdoorShadows(light, hero);
     setupPostProcessing(scene, camera);
 
     loadHPModels(scene, engine, models["HPBar"]);
@@ -62,14 +63,13 @@ export async function createOutdoor(engine) {
     let sword = addSword(scene, models["Sword2"]);
     createTrail(scene, engine, sword, 0.2, 40, new BABYLON.Vector3(0, 0, 0.32));
 
-    const slime1 = models["Slime1"];
-    const [slimeEncounter] = setupEnemies(scene, character, terrain, 1, slime1);
-    if (slimeEncounter) {
-        slimeEncounter.position = new BABYLON.Vector3(120, 31, -252);
-        registerEncounterClear(scene, slimeEncounter, loopState, 'slimeCleared');
-    }
-
-    addOutdoorPickups(scene, loopState);
+    setupOutdoorQuestActors({
+        scene,
+        character,
+        terrain,
+        slimeModel: models['Slime1'],
+        loopState,
+    });
 
     VFX['fireBall'] = addFireball(scene, engine);
 
@@ -79,148 +79,6 @@ export async function createOutdoor(engine) {
     });
 
     return scene;
-}
-
-function addOutdoorPickups(scene, loopState) {
-    const swordPickup = BABYLON.MeshBuilder.CreateBox('swordPickup', { size: 1.1 }, scene);
-    swordPickup.position = new BABYLON.Vector3(130, 31, -262);
-    swordPickup.material = createPickupMaterial(scene, new BABYLON.Color3(0.7, 0.7, 0.75));
-    markMeshAsInteractable(swordPickup, {
-        type: 'pickup',
-        prompt: 'Press E - Pick up sword',
-        onInteract: ({ mesh }) => {
-            if (loopState.pickupItem('sword')) {
-                mesh.setEnabled(false);
-                mesh.isPickable = false;
-            }
-        }
-    });
-
-    const potionPickup = BABYLON.MeshBuilder.CreateCylinder('potionPickup', { diameter: 0.8, height: 1.4 }, scene);
-    potionPickup.position = new BABYLON.Vector3(137, 31, -257);
-    potionPickup.material = createPickupMaterial(scene, new BABYLON.Color3(0.5, 0.15, 0.7));
-    markMeshAsInteractable(potionPickup, {
-        type: 'pickup',
-        prompt: 'Press E - Pick up potion',
-        onInteract: ({ mesh }) => {
-            if (loopState.pickupItem('potion')) {
-                mesh.setEnabled(false);
-                mesh.isPickable = false;
-            }
-        }
-    });
-}
-
-function createPickupMaterial(scene, color) {
-    const material = new BABYLON.StandardMaterial(`pickup-${color.toHexString()}`, scene);
-    material.emissiveColor = color;
-    material.diffuseColor = color;
-    return material;
-}
-
-function registerEncounterClear(scene, enemy, loopState, encounterKey) {
-    let markedCleared = false;
-    scene.onBeforeRenderObservable.add(() => {
-        if (markedCleared || enemy?.health?.isAlive !== false) {
-            return;
-        }
-
-        markedCleared = true;
-        loopState.markEncounterCleared(encounterKey);
-    });
-}
-
-function setupEnvironment(scene) {
-    scene.clearColor = new BABYLON.Color3.White();
-    const environmentURL = "./assets/textures/lighting/environment.env";
-    const environmentMap = BABYLON.CubeTexture.CreateFromPrefilteredData(environmentURL, scene);
-    scene.environmentTexture = environmentMap;
-    scene.environmentIntensity = 1.0;
-}
-
-function createSkydome(scene) {
-    var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 8000.0 }, scene);
-    var skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
-    skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("./assets/textures/lighting/skybox", scene);
-    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
-    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-    skybox.material = skyboxMaterial;
-
-    return skybox;
-}
-
-
-
-function setupTerrain(scene) {
-    const terrainMaterial = new BABYLON.TerrainMaterial("terrainMaterial", scene);
-    terrainMaterial.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
-    terrainMaterial.specularPower = 64;
-    terrainMaterial.mixTexture = new BABYLON.Texture("assets/textures/terrain/mixMap.png", scene);
-    terrainMaterial.diffuseTexture1 = new BABYLON.Texture("assets/textures/terrain/floor.png", scene);
-    terrainMaterial.diffuseTexture2 = new BABYLON.Texture("assets/textures/terrain/rock.png", scene);
-    terrainMaterial.diffuseTexture3 = new BABYLON.Texture("assets/textures/terrain/grass.png", scene);
-
-    terrainMaterial.diffuseTexture1.uScale = terrainMaterial.diffuseTexture1.vScale = 15;
-    terrainMaterial.diffuseTexture2.uScale = terrainMaterial.diffuseTexture2.vScale = 8;
-    terrainMaterial.diffuseTexture3.uScale = terrainMaterial.diffuseTexture3.vScale = 23;
-
-    const ground = BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", "assets/textures/terrain/hieghtMap.png", {
-        width: 1000,
-        height: 1000,
-        subdivisions: 100,
-        minHeight: 0,
-        maxHeight: 100,
-        onReady: function (ground) {
-            ground.position.y = -10.05;
-            ground.material = terrainMaterial;
-            ground.receiveShadows = true;
-            // ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.HeightmapImpostor, { mass: 0, restitution: 0.0, friction: 100.8 }, scene);
-            // setTimeout(() => scene.physicsEnabled = true, 1000); // Enable physics after the ground is ready
-            var groundAggregate;
-            groundAggregate = new BABYLON.PhysicsAggregate(ground, BABYLON.PhysicsShapeType.MESH, { mass: 0, restitution: 0.0, friction: 1000000000.8 }, scene);
-            setTimeout(() => {
-                scene.physicsEnabled = true;
-            }, 10);
-        }
-    }, scene);
-
-    return ground;
-}
-
-
-
-function setupLighting(scene) {
-    const light = new BABYLON.DirectionalLight("light0", new BABYLON.Vector3(-800, -1400, -1000), scene);
-    light.intensity = 1.7;
-    // light.shadowMinZ = 1800;
-    // light.shadowMinZ = 2100;
-    light.shadowMinZ = 1500;
-    light.shadowMaxZ = 2300;
-    light.diffuse = new BABYLON.Color3(1, 1, 1);
-
-    // var light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-    // light.intensity = 1.7;
-
-    // light.diffuse = new BABYLON.Color3(1, 1, 1);
-    // light.specular = new BABYLON.Color3(0, 1, 0);
-    // light.groundColor = new BABYLON.Color3(0, 0.5, 1);
-
-    return light;
-}
-
-function setupShadows(light, shadowCaster) {
-
-    const shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
-    // shadowGenerator.useExponentialShadowMap = false;
-    shadowGenerator.darkness = 0.6;
-    // shadowGenerator.darkness = 1;
-    shadowGenerator.usePoissonSampling = true;
-    shadowGenerator.nearPlane = 1;
-    shadowGenerator.farPlane = 10000;
-    shadowGenerator.minZ = -100;
-    shadowGenerator.addShadowCaster(shadowCaster);
 }
 
 function loadHPModels(scene, engine, HPBar) {
