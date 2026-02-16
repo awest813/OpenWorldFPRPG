@@ -11,9 +11,12 @@ import { setupEnemies } from '../../character/enemy.js';
 import { Health } from '../../character/health.js';
 import addSword from '../../character/equips/held.js';
 import { createProgressionState, getMaxHealthFromProgression } from '../../rpg/progression.js';
+import { markMeshAsInteractable } from '../../character/interact/interaction.js';
+import { getLoopState } from '../../rpg/loopState.js';
 
 export async function createOutdoor(engine) {
     const scene = new BABYLON.Scene(engine);
+    const loopState = getLoopState();
 
     const spawnPoint = new BABYLON.Vector3(134.683, 80, -271.427);
     const { character, dummyAggregate } = await setupPhysics(scene, spawnPoint);
@@ -59,7 +62,13 @@ export async function createOutdoor(engine) {
     createTrail(scene, engine, sword, 0.2, 40, new BABYLON.Vector3(0, 0, 0.32));
 
     const slime1 = models["Slime1"];
-    setupEnemies(scene, character, terrain, 7, slime1);
+    const [slimeEncounter] = setupEnemies(scene, character, terrain, 1, slime1);
+    if (slimeEncounter) {
+        slimeEncounter.position = new BABYLON.Vector3(120, 31, -252);
+        registerEncounterClear(scene, slimeEncounter, loopState, 'slimeCleared');
+    }
+
+    addOutdoorPickups(scene, loopState);
 
     VFX['fireBall'] = addFireball(scene, engine);
 
@@ -69,6 +78,55 @@ export async function createOutdoor(engine) {
     });
 
     return scene;
+}
+
+function addOutdoorPickups(scene, loopState) {
+    const swordPickup = BABYLON.MeshBuilder.CreateBox('swordPickup', { size: 1.1 }, scene);
+    swordPickup.position = new BABYLON.Vector3(130, 31, -262);
+    swordPickup.material = createPickupMaterial(scene, new BABYLON.Color3(0.7, 0.7, 0.75));
+    markMeshAsInteractable(swordPickup, {
+        type: 'pickup',
+        prompt: 'Press E - Pick up sword',
+        onInteract: ({ mesh }) => {
+            if (loopState.pickupItem('sword')) {
+                mesh.setEnabled(false);
+                mesh.isPickable = false;
+            }
+        }
+    });
+
+    const potionPickup = BABYLON.MeshBuilder.CreateCylinder('potionPickup', { diameter: 0.8, height: 1.4 }, scene);
+    potionPickup.position = new BABYLON.Vector3(137, 31, -257);
+    potionPickup.material = createPickupMaterial(scene, new BABYLON.Color3(0.5, 0.15, 0.7));
+    markMeshAsInteractable(potionPickup, {
+        type: 'pickup',
+        prompt: 'Press E - Pick up potion',
+        onInteract: ({ mesh }) => {
+            if (loopState.pickupItem('potion')) {
+                mesh.setEnabled(false);
+                mesh.isPickable = false;
+            }
+        }
+    });
+}
+
+function createPickupMaterial(scene, color) {
+    const material = new BABYLON.StandardMaterial(`pickup-${color.toHexString()}`, scene);
+    material.emissiveColor = color;
+    material.diffuseColor = color;
+    return material;
+}
+
+function registerEncounterClear(scene, enemy, loopState, encounterKey) {
+    let markedCleared = false;
+    scene.onBeforeRenderObservable.add(() => {
+        if (markedCleared || enemy?.health?.isAlive !== false) {
+            return;
+        }
+
+        markedCleared = true;
+        loopState.markEncounterCleared(encounterKey);
+    });
 }
 
 function setupEnvironment(scene) {
