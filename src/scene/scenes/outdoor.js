@@ -35,7 +35,7 @@ export async function createOutdoor(engine) {
     setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate);
     const progression = createProgressionState({ race: 'nord', level: 1 });
     character.health = new Health("Hero", getMaxHealthFromProgression(progression), dummyAggregate);
-    character.health.rotationCheck = hero;
+    character.health.rotationCheck = scene.activeCamera;
     character.health.rangeCheck = character;
     character.health.progression = progression;
     PLAYER = character;

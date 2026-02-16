@@ -40,7 +40,20 @@ export class Spell {
         directionToTarget.normalize();
 
         // Check if the caster is facing the target
-        let dotProduct = BABYLON.Vector3.Dot(caster.rotationCheck.forward, directionToTarget);
+        const rotationCheck = caster.rotationCheck;
+        let casterForward = rotationCheck?.forward;
+
+        const isCameraLike = typeof rotationCheck?.getForwardRay === "function";
+        if (isCameraLike) {
+            const forwardRay = rotationCheck.getForwardRay();
+            if (forwardRay?.direction) {
+                casterForward = forwardRay.direction;
+            }
+        }
+
+        if (!casterForward) return false;
+
+        let dotProduct = BABYLON.Vector3.Dot(casterForward, directionToTarget);
         //   console.log(caster.rotationCheck.forward);
         if (dotProduct < this.facingThreshold) {
             console.log("Caster is not facing the target.");
