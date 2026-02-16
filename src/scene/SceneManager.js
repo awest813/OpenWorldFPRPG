@@ -263,8 +263,6 @@ class SceneManager {
     const debugParam = urlParams.get('debug');
     if (debugParam === 'true') {
       setDebug(true);
-      // Deprecated compatibility bridge for legacy global access.
-      DEBUG = true;
     }
     this.logDebug('Debug mode enabled through URL parameter');
 

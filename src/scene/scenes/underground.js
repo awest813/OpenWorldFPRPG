@@ -33,7 +33,6 @@ export async function createUnderground(engine) {
     character.health.rotationCheck = hero;
     character.health.rangeCheck = character;
     setPlayer(character);
-    PLAYER = character;
 
     const light = setupLighting(scene);
     addTorch(scene, new BABYLON.Vector3(1, 10, 1));

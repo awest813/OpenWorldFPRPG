@@ -51,9 +51,7 @@ export async function createBuilder(engine) {
         character.health.rotationCheck = hero;
         character.health.rangeCheck = character;
         setPlayer(character);
-        PLAYER = character;
         setDummy(dummyAggregate);
-        DUMMY = dummyAggregate;
 
         setupEnvironment(scene);
         let LEVEL_SIZE = 20000;

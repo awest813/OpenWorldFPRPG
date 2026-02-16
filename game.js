@@ -8,9 +8,6 @@ window.addEventListener('DOMContentLoaded', async function () {
     const sceneManager = new SceneManager('renderCanvas');
     setSceneManager(sceneManager);
 
-    // Deprecated compatibility bridge for legacy global access.
-    SCENE_MANAGER = sceneManager;
-
     await sceneManager.start();
 
     setDamagePopupSceneManager(sceneManager);

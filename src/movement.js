@@ -6,7 +6,6 @@ import { isMeleeTargetingDebugEnabled, resolveMeleeTarget, setMeleeTargetingDebu
 export function setupInputHandling(scene, character, camera, hero, anim, engine, dummyAggregate) {
     const nextInputMap = {};
     setInputMap(nextInputMap);
-    inputMap = nextInputMap;
     const interactionController = createInteractionController(scene, { maxDistance: 6 });
     window.onPlayerInteract = interactionController.interact;
     window.onQuickAttack = () => castMeleeSpellWithResolver(SPELLS.quickSwing, QUICK_SWING_COOLDOWN_MS);
@@ -225,7 +224,6 @@ function castMeleeSpellWithResolver(spell, cooldownMs) {
 
     player.target = target;
     setPlayer(player);
-    PLAYER = player;
 
     if (targetBaseOnCameraView) {
         rotateToTarget();

@@ -48,7 +48,6 @@ export async function createTown(engine) {
     character.health.rotationCheck = hero;
     character.health.rangeCheck = character;
     setPlayer(character);
-    PLAYER = character;
 
     // Todo: add shadow and post toggles in settings
     // Defer non-critical operations
