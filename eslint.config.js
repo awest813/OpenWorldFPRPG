@@ -105,7 +105,6 @@ export default [
                 anim: 'writable',
                 box: 'writable',
                 lil: 'readonly',
-                startTime: 'writable'
             }
         },
         plugins: {

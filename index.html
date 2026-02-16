@@ -243,14 +243,16 @@
   </style>
 
   <script>
-    // Record the time when the page starts loading
-    const startTime = performance.now();
+    // Record the time when the page starts loading.
+    (() => {
+      const pageStartTime = performance.now();
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const endTime = performance.now();
-      const domLoadTime = endTime - startTime;
-      console.log(`DOM loaded in ${domLoadTime.toFixed(2)} milliseconds`);
-    });
+      document.addEventListener('DOMContentLoaded', () => {
+        const endTime = performance.now();
+        const domLoadTime = endTime - pageStartTime;
+        console.log(`DOM loaded in ${domLoadTime.toFixed(2)} milliseconds`);
+      });
+    })();
   </script>
 
   <script src="./lib/babylon.js"></script>
