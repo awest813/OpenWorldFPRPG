@@ -11,7 +11,7 @@ import { createBuilder } from './scenes/builder.js';
 class SceneManager {
   constructor(canvasId, engine) {
     this.canvas = document.getElementById(canvasId);
-    this.engine = new BABYLON.Engine(this.canvas, true);
+    this.engine = engine || new BABYLON.Engine(this.canvas, true);
     this.guiTextures = new Map();
     this.scenes = [];
     this.activeScene = null;
@@ -28,17 +28,39 @@ class SceneManager {
     };
   }
 
+  logDebug(message, data = null) {
+    if (!DEBUG) {
+      return;
+    }
+
+    if (data === null) {
+      console.log(`[SceneManager] ${message}`);
+      return;
+    }
+
+    console.log(`[SceneManager] ${message}`, data);
+  }
+
 
   async loadScene(sceneCreationFunction) {
     const scene = await sceneCreationFunction(this.engine);
     scene.damagePopupAnimationGroup = new BABYLON.AnimationGroup("popupAnimation", scene);
     this.scenes.push(scene);
     this.guiTextures.set(scene, new BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene));
-    this.activeGUI = this.guiTextures.get(this.activeScene);
+    this.activeGUI = this.guiTextures.get(scene);
+    this.logDebug('Scene loaded into manager', {
+      sceneCount: this.scenes.length,
+      hasGuiTexture: this.guiTextures.has(scene)
+    });
     return scene;
   }
 
   async switchToScene(index) {
+    if (!this.scenes[index]) {
+      console.warn(`[SceneManager] Unable to switch scenes. No scene exists at index: ${index}`);
+      return;
+    }
+
     if (this.activeScene) {
       this.engine.stopRenderLoop();
       if (DEBUG) this.activeScene.debugLayer.hide();
@@ -46,6 +68,7 @@ class SceneManager {
     }
     this.activeScene = this.scenes[index];
     this.activeGUI = this.guiTextures.get(this.activeScene);
+    this.logDebug('Switching to scene', { index });
     this.engine.runRenderLoop(() => {
       this.activeScene.render();
     });
@@ -67,9 +90,14 @@ class SceneManager {
 
     const debugParam = urlParams.get('debug');
     if (debugParam === 'true') { DEBUG = true; }
+    this.logDebug('Debug mode enabled through URL parameter');
 
     const sceneParam = urlParams.get('scene');
     const defaultScene = this.sceneCreators[sceneParam] || this.sceneCreators.outdoor; // Default to outdoor if no valid scene parameter
+    this.logDebug('Scene selection', {
+      requestedScene: sceneParam || 'outdoor',
+      fallbackUsed: !this.sceneCreators[sceneParam]
+    });
 
     await this.loadScene(defaultScene);
     await this.switchToScene(0);
@@ -96,6 +124,9 @@ class SceneManager {
     const endTime = performance.now();
     const domLoadTime = endTime - startTime;
     console.log(`Scene loaded in ${domLoadTime.toFixed(2)} milliseconds`);
+    this.logDebug('Scene load timing complete', {
+      milliseconds: Number(domLoadTime.toFixed(2))
+    });
 
   }
 }

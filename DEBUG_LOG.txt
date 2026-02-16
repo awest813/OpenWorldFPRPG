@@ -1,0 +1,8 @@
+# Debug / Maintenance Log
+
+## 2026-02-16
+- Fixed SceneManager to respect an injected Babylon engine when provided.
+- Fixed GUI texture activation during scene load so the loaded scene gets an active GUI reference.
+- Added a scene index guard in scene switching to avoid undefined scene errors.
+- Added optional debug logs (enabled with `?debug=true`) for scene selection, load status, switching, and timing.
+- Updated README with a dedicated debugging notes section and typo fixes.

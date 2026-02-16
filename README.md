@@ -14,6 +14,8 @@ You can switch scenes by adding [`?scene=inn`](https://rpgskilltreegenerator.com
 
 You can add [`&debug=true`](https://rpgskilltreegenerator.com/RPG/index.html?scene=outdoor&debug=true) to load a scene inspector. 
 
+When debug mode is enabled, `SceneManager` now prints tagged logs in the browser console to help track scene selection, scene switching, and load timing.
+
 You can view the full scene list in [`SceneManager.js`](/src/scene/SceneManager.js). 
 
 ## Run Locally
@@ -22,7 +24,12 @@ You can view the full scene list in [`SceneManager.js`](/src/scene/SceneManager.
 Run a local server, then open `index.html` in your browser. 
 
 ### Low Latency Changes
-Make a code change, save the file, and watch as your change is immediatly live. No build process needed.  
+Make a code change, save the file, and watch as your change is immediately live. No build process needed.
+
+## Debugging Notes
+- Use `?debug=true` to enable Babylon inspector and `SceneManager` debug logs.
+- If scene loading fails, verify the `scene` query parameter is one of the names listed in `src/scene/SceneManager.js`.
+- Invalid `scene` values now safely fall back to `outdoor` and report that fallback through debug logs.
 
 
 ## Contributing
