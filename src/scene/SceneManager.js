@@ -250,6 +250,7 @@ class SceneManager {
   // todo map of scenes near the current scene
   // in this case, just load starting zone
   async start() {
+    const sceneStartTime = performance.now();
 
     let timeout = 100;
     if (!getFastReload()) timeout = 1000;
@@ -298,10 +299,10 @@ class SceneManager {
     });
 
     const endTime = performance.now();
-    const domLoadTime = endTime - startTime;
-    console.log(`Scene loaded in ${domLoadTime.toFixed(2)} milliseconds`);
+    const sceneLoadTime = endTime - sceneStartTime;
+    console.log(`Scene loaded in ${sceneLoadTime.toFixed(2)} milliseconds`);
     this.logDebug('Scene load timing complete', {
-      milliseconds: Number(domLoadTime.toFixed(2))
+      milliseconds: Number(sceneLoadTime.toFixed(2))
     });
 
   }
